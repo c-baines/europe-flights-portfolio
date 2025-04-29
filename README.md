@@ -4,6 +4,7 @@ https://ansperformance.eu/data/  data from Eurocontrol
 
 https://www.opdi.aero/flight-event-data download script
 
+## Flight List Data 
 | Variable Name | Type | Description | Example |
 |-|-|-|-|
 | id | integer | unique identification number (primary key) | 11365 |
@@ -34,3 +35,16 @@ https://www.opdi.aero/concepts concept explainer
 https://virtualradarserver.co.uk/Documentation/Glossary/Icao24.aspx icao24 explainer
 
 https://www.opdi.aero/methodology version explainer 
+
+## Emissions Data
+| Variable Name | Type | Description | Example |
+|-|-|-|-|
+| year | integer | Year of record | 2019 |
+| month | integer | Month of record | 1 | 
+| state_name | character varying | State name | ALBANIA | 
+| state_code | character varying |2 character state abbreviation | LA |
+| co2_qty_tonnes | double precision | CO2 quantity for that state in tonnes (kg) | 8318.42 |
+| tf* | integer | Traffic for that state | 821 |
+| note* | boolean | Speecial data aggregation True/False | TRUE | 
+
+https://ansperformance.eu/reference/dataset/emissions/ explainer 
