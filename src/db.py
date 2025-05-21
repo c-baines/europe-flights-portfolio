@@ -159,6 +159,7 @@ class IsoCodes(Base):
         region_name (str):
         subregion_name (str):
         intermediate_region_name (str):
+        country (str):
         iso_alpha2 (str):
         iso_alpha3 (str): 
 
@@ -171,14 +172,28 @@ class IsoCodes(Base):
     region_name = Column(String)
     subregion_name = Column(String)
     intermediate_region_name = Column(String)
+    country = Column(String)
     iso_alpha2 = Column(String)
     iso_alpha3 = Column(String)
+
+class IcaoIso(Base):
+    
+    __tablename__ = 'icao_iso'
+    __table_args__ = {'schema': 'public'}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    emissions_state_name = Column(String)
+    icao_state_name = Column(String)
+    icao = Column(String)
+    iso_alpha3 = Column(String)
+   
 
 class TableName(Enum):
     emissions = 'emissions'
     flight_list = 'flight_list'
     icao_list = 'icao_list' 
     iso_codes = 'iso_codes'
+    icao_iso = "icao_iso"
 
 
 # Create just the "flight_list"/"co2_emissions"/"icao_list/iso_codes" table, run this the first time
@@ -187,3 +202,4 @@ class TableName(Enum):
 # Base.metadata.tables['public.emissions'].create(engine)
 # Base.metadata.tables['public.icao_list'].create(engine)
 # Base.metadata.tables['public.iso_codes'].create(engine)
+# Base.metadata.tables['public.icao_iso'].create(engine)
