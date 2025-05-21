@@ -101,4 +101,4 @@ def ingest_folder(folder: str, table: TableName):
 # ingest_folder('flight_list', TableName.flight_list)
 # ingest_folder('co2_emissions_by_state', TableName.emissions)
 # ingest_folder('iata-icao', TableName.icao_list)
-ingest_folder('iso_codes', TableName.iso_codes)
+# ingest_folder('iso_codes', TableName.iso_codes)
