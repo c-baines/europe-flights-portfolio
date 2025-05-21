@@ -32,3 +32,19 @@ def get_months_unique():
 
 class STARTUP_QUERIES():
     FL_COUNT_BY_DAY_DF = get_flight_counts_by_day()
+
+def get_country_emissions():
+    query = text("""
+                SELECT 
+                    e.id, 
+                    e.year, 
+                    e.month, 
+                    e.state_name, 
+                    e.state_code, 
+                    e.co2_qty_tonnes, 
+                    i.iso_alpha3
+                FROM emissions e
+                JOIN icao_iso i ON e.state_name = i.emissions_state_name
+             """)
+    df = pd.read_sql(query, engine, dtype_backend="pyarrow")
+    return df

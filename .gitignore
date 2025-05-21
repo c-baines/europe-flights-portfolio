@@ -1,5 +1,7 @@
 .env
 setup/data/*
+!setup/data/icao_iso
 setup/__pycache__/data_download.cpython-313.pyc
 setup/__pycache__/data_ingestion.cpython-313.pyc
 src/__pycache__/db.cpython-313.pyc
+todo.txt
