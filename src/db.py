@@ -1,21 +1,21 @@
 """
-db.py 
+src/db.py 
 
-Initialise postgreSQL database with variables for flight_list, co2_emissions_by_state
+Initialise postgreSQL database with variables for flight_list, emissions, icao_list, iso_codes
 
 1. Connect to local postgreSQL 
 2. Define table class with variables 
 3. Create table in postgreSQL
 
-c-baines
-23/4/25 
+author: c-baines
+created: 23/4/25
+last modified: 12/5/25 
 """
 
 from sqlalchemy import create_engine
-# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.engine import URL
-from sqlalchemy import Column, Integer, String, DateTime, Float, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Date, Float, Boolean
 from dotenv import load_dotenv, find_dotenv
 import os
 from enum import Enum
@@ -52,7 +52,7 @@ class FlightList(Base):
     ec_id (str): Eurocontrol hash id 
     icao24 (str): International Civil Avation Organization aircraft identifier
     flt_id (str): Flight number
-    dof (str): Date of flight
+    dof (date): Date of flight
     adep (str): Aerodrome of departure
     ades (str): Aerodrome of destination 
     adep_p (str): Planned aerodrome of departure
@@ -76,7 +76,7 @@ class FlightList(Base):
     ec_id = Column(String, nullable=True)
     icao24 = Column(String, nullable=True)
     flt_id = Column(String, nullable=True)
-    dof = Column(String, nullable=True)
+    dof = Column(Date, nullable=True)
     adep = Column(String, nullable=True)
     ades = Column(String, nullable=True)
     adep_p = Column(String, nullable=True)
@@ -119,11 +119,71 @@ class Emissions(Base):
     tf = Column(Integer)
     note = Column(Boolean)
 
+class IcaoList(Base):
+    """
+    Represents table icao_list in db
+
+    Attributes:
+        __tablename__ (str): 
+        __table_args__ (str):
+        country_code (str):
+        region_name (str):
+        iata (str):
+        icao (str):
+        airport (str):
+        latitude (flt):
+        longitude (flt):
+
+    """
+
+    __tablename__ = "icao_list"
+    __table_args__ = {'schema': 'public'}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    country_code = Column(String)
+    region_name = Column(String)
+    iata = Column(String)
+    icao = Column(String)
+    airport = Column(String)
+    latitude = Column(Float)
+    longitude = Column(Float)
+
+class IsoCodes(Base):
+    """
+    Represents table iso_codes in db
+
+    Attributes:
+        __tablename__ (str):
+        __table_args__ (str):
+        id (int):
+        region_name (str):
+        subregion_name (str):
+        intermediate_region_name (str):
+        iso_alpha2 (str):
+        iso_alpha3 (str): 
+
+    """
+
+    __tablename__ = "iso_codes"
+    __table_args__ = {'schema': 'public'}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    region_name = Column(String)
+    subregion_name = Column(String)
+    intermediate_region_name = Column(String)
+    iso_alpha2 = Column(String)
+    iso_alpha3 = Column(String)
+
 class TableName(Enum):
     emissions = 'emissions'
     flight_list = 'flight_list'
+    icao_list = 'icao_list' 
+    iso_codes = 'iso_codes'
 
 
-# Create just the "flight_list"/"co2_emissions" table, run this the first time 
+# Create just the "flight_list"/"co2_emissions"/"icao_list/iso_codes" table, run this the first time
+# Comment out when running data_ingestion.py
 # Base.metadata.tables['public.flight_list'].create(engine)
 # Base.metadata.tables['public.emissions'].create(engine)
+# Base.metadata.tables['public.icao_list'].create(engine)
+# Base.metadata.tables['public.iso_codes'].create(engine)
