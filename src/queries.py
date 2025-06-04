@@ -1,9 +1,10 @@
 """
 src/queries.py
 
-PostgresQL queries
+PostgreSQL queries
 
 created: 19/5/25
+modified: 
 """
 
 from sqlalchemy import text

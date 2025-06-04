@@ -3,3 +3,4 @@ setup/data/*
 !setup/data/icao_iso
 *.pyc
 todo.txt
+feature_test.py
