@@ -4,7 +4,7 @@ src/layout.py
 App layout
 
 created: 19/5/25
-modified:
+modified: 12/6/25
 """
 
 from dash import html, dcc, Input, Output

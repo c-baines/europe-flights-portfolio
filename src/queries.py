@@ -4,7 +4,7 @@ src/queries.py
 PostgreSQL queries
 
 created: 19/5/25
-modified: 
+modified: 12/6/25
 """
 
 from sqlalchemy import text
@@ -14,10 +14,8 @@ from datetime import datetime
 
 def get_flight_counts_by_day():
     query = text("""
-                SELECT dof, COUNT(*) AS count
-                FROM flight_list
-                GROUP BY dof
-                ORDER BY dof;
+                SELECT *
+                FROM flight_counts;
             """)
     df = pd.read_sql(query, engine, dtype_backend="pyarrow")
     df['month_year'] = df['dof'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').strftime('%B %Y'))

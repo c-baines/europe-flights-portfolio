@@ -2,7 +2,7 @@
 src/callbacks.py
 
 created: 19/5/25
-modified: 2/6/25
+modified: 12/6/25
 """
 from dash import Input, Output, callback
 from src.queries import STARTUP_QUERIES, get_counts_cards
@@ -24,16 +24,79 @@ def register_callbacks(app):
         """
         Number of flights line graph with date dropdown
         """
+        # old ---------------------------------------------------------
         df = STARTUP_QUERIES.FL_COUNT_BY_DAY_DF.copy()
 
         # filter df for only records where df['month_string']=month_string
         if month_string!='all':
             df = df[df['month_year']==month_string] 
 
+        line_styles = {
+            'total': 'solid',
+            'intra_eu': 'dash',
+            'arrivals_from_outside': 'dash',
+            'departures_to_outside': 'dash',
+            'overflights': 'dash'
+        }
+
         # redefine the figure
-        fig = px.line(df, x='dof', y='count', title='Flights over time')
+        fig = px.line(
+            df, 
+            x='dof', 
+            y='count', 
+            color='category',
+            line_dash='category',         # Controls which dash style to use
+            line_dash_map=line_styles
+        )
         return fig
+
+
+    @app.callback(
+        Output('card', 'figure'),
+        Input('flight-count-dropdown', 'value')
+    )
+    def update_card_counts(month_string):
+        """
+        """
+        df = get_counts_cards().copy()
+        columns = ['intra_eu', 'departures_to_outside', 'arrivals_from_outside', 'overflights']
+        vals = {}
+        if not month_string or month_string=='all':
+            vals = {col:(df[col].sum(), None) for col in columns}
+
+        else:
+            curr_df = df[df['month_string']==month_string].copy()
+            prev_month_str = (datetime.strptime(month_string,'%B %Y') + relativedelta(months=-1)).strftime('%B %Y')
+            prev_df = df[df['month_string']==prev_month_str].copy()
+
+            if prev_df.empty:
+                vals = {col:(curr_df[col].to_list()[0], None) for col in columns}
+            else:
+                vals = {col:(curr_df[col].to_list()[0], prev_df[col].to_list()[0]) for col in columns}
+
+        fig = make_subplots(
+                rows=1, cols=len(columns),
+                specs=[[{'type': 'domain'}]*len(columns)]
+            )
+        
+        count=1
+        for col, val in vals.items():
+            fig.add_trace(
+                go.Indicator(
+                    mode="number+delta",
+                    value=val[0],
+                    delta={'reference': val[1]} if val[1] else None,
+                    title={'text': col.replace('_', ' ').title()}),
+                    row=1, col=count
+            )
+            count+=1
     
+        fig.update_layout(
+            paper_bgcolor = "lightgray",
+            height=250)
+
+        return fig
+  
     @app.callback(
         Output('emissions-choropleth', 'figure'),
         Input('choropleth-dropdown-year', 'value'),
@@ -111,51 +174,6 @@ def register_callbacks(app):
     
         return fig
     
-    @app.callback(
-        Output('card', 'figure'),
-        Input('flight-count-dropdown', 'value')
-    )
-    def update_card_counts(month_string):
-        """
-        """
-        df = get_counts_cards().copy()
-        columns = ['intra_eu', 'departures_to_outside', 'arrivals_from_outside', 'overflights']
-        vals = {}
-        if not month_string or month_string=='all':
-            vals = {col:(df[col].sum(), None) for col in columns}
-
-        else:
-            curr_df = df[df['month_string']==month_string].copy()
-            prev_month_str = (datetime.strptime(month_string,'%B %Y') + relativedelta(months=-1)).strftime('%B %Y')
-            prev_df = df[df['month_string']==prev_month_str].copy()
-
-            if prev_df.empty:
-                vals = {col:(curr_df[col].to_list()[0], None) for col in columns}
-            else:
-                vals = {col:(curr_df[col].to_list()[0], prev_df[col].to_list()[0]) for col in columns}
-
-        fig = make_subplots(
-                rows=1, cols=len(columns),
-                specs=[[{'type': 'domain'}]*len(columns)]
-            )
-        
-        count=1
-        for col, val in vals.items():
-            fig.add_trace(
-                go.Indicator(
-                    mode="number+delta",
-                    value=val[0],
-                    delta={'reference': val[1]} if val[1] else None,
-                    title={'text': col.replace('_', ' ').title()}),
-                    row=1, col=count
-            )
-            count+=1
-    
-        fig.update_layout(
-            paper_bgcolor = "lightgray",
-            height=250)
-
-        return fig
 
 
 
