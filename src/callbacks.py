@@ -5,10 +5,13 @@ created: 19/5/25
 modified: 2/6/25
 """
 from dash import Input, Output, callback
-from src.queries import STARTUP_QUERIES
+from src.queries import STARTUP_QUERIES, get_counts_cards
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 
 
 def register_callbacks(app): 
@@ -54,6 +57,7 @@ def register_callbacks(app):
             'co2_qty_tonnes': 'mean'
         }).reset_index()
 
+        # get top 5 emitters for date range
         df = df.sort_values(by='co2_qty_tonnes',ascending=False)
         x = df['co2_qty_tonnes'].to_list()[:5]
         y = df['state_name'].to_list()[:5]
@@ -62,6 +66,7 @@ def register_callbacks(app):
 
         fig = make_subplots(
             rows=1, cols=2,
+            # specify type of figure. px.choropleth not automatically compatible with make_subplots()
             specs=[[{'type': 'choropleth'}, {'type': 'xy'}]],
             column_widths=[0.6, 0.4]
         )
@@ -104,6 +109,52 @@ def register_callbacks(app):
         height=600
         )
     
+        return fig
+    
+    @app.callback(
+        Output('card', 'figure'),
+        Input('flight-count-dropdown', 'value')
+    )
+    def update_card_counts(month_string):
+        """
+        """
+        df = get_counts_cards().copy()
+        columns = ['intra_eu', 'departures_to_outside', 'arrivals_from_outside', 'overflights']
+        vals = {}
+        if not month_string or month_string=='all':
+            vals = {col:(df[col].sum(), None) for col in columns}
+
+        else:
+            curr_df = df[df['month_string']==month_string].copy()
+            prev_month_str = (datetime.strptime(month_string,'%B %Y') + relativedelta(months=-1)).strftime('%B %Y')
+            prev_df = df[df['month_string']==prev_month_str].copy()
+
+            if prev_df.empty:
+                vals = {col:(curr_df[col].to_list()[0], None) for col in columns}
+            else:
+                vals = {col:(curr_df[col].to_list()[0], prev_df[col].to_list()[0]) for col in columns}
+
+        fig = make_subplots(
+                rows=1, cols=len(columns),
+                specs=[[{'type': 'domain'}]*len(columns)]
+            )
+        
+        count=1
+        for col, val in vals.items():
+            fig.add_trace(
+                go.Indicator(
+                    mode="number+delta",
+                    value=val[0],
+                    delta={'reference': val[1]} if val[1] else None,
+                    title={'text': col.replace('_', ' ').title()}),
+                    row=1, col=count
+            )
+            count+=1
+    
+        fig.update_layout(
+            paper_bgcolor = "lightgray",
+            height=250)
+
         return fig
 
 

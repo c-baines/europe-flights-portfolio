@@ -15,12 +15,15 @@ from src.queries import get_flight_counts_by_day, get_months_unique, get_country
 layout = html.Div([
     # number of flights line graph
     html.Div(children=[
-    html.H1("Europe Flights Portfolio"),
+    html.H1("Flight Counts"),
     dcc.Dropdown(
         id='flight-count-dropdown', 
         options=[{"label": "All data", "value": "all"}] + [{"label": m, "value": m} for m in get_months_unique()],
         value="all",
         placeholder='Select a Month'
+    ),
+    dcc.Graph(
+        id="card"
     ),
     dcc.Graph(id='flight-count-graph')]),
 

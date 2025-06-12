@@ -26,7 +26,7 @@ def get_flight_counts_by_day():
 def get_months_unique():
     query = text("""
                  SELECT DISTINCT dof
-                 FROM flight_list             
+                 FROM flight_list;             
             """)
     df = pd.read_sql(query, engine, dtype_backend="pyarrow")
     df['month_year'] = df['dof'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').strftime('%B %Y'))
@@ -43,8 +43,8 @@ def get_country_emissions():
                     e.co2_qty_tonnes, 
                     i.iso_alpha3
                 FROM emissions e
-                JOIN icao_iso i ON e.state_name = i.emissions_state_name
-             """)
+                JOIN icao_iso i ON e.state_name = i.emissions_state_name;
+            """)
     df = pd.read_sql(query, engine, dtype_backend="pyarrow")
     df['month_string'] = df['month'].apply(lambda x: datetime.strptime(str(x), '%m').strftime('%B'))
     return df
@@ -54,8 +54,8 @@ def get_year_emissions():
                 SELECT 
                     DISTINCT year
                 FROM emissions
-                ORDER BY year ASC
-                 """)
+                ORDER BY year ASC;
+            """)
     df = pd.read_sql(query, engine, dtype_backend="pyarrow")
     return df['year'].to_list()
 
@@ -64,12 +64,22 @@ def get_month_emissions():
                 SELECT
                     DISTINCT month
                 FROM emissions
-                ORDER BY month ASC
-                 """)
+                ORDER BY month ASC;
+            """)
     df = pd.read_sql(query, engine, dtype_backend="pyarrow") 
     df['month'] = df['month'].apply(lambda x: datetime.strptime(str(x), '%m').strftime('%B'))
     return df['month'].to_list()
    
+def get_counts_cards():
+    query = text("""
+            SELECT * 
+            FROM card_counts 
+            ORDER BY month
+            ;
+        """)
+    df = pd.read_sql(query, engine)
+    df['month_string'] = df['month'].apply(lambda x: datetime.strptime(str(x), "%Y-%m-%d %H:%M:%S%z").strftime('%B %Y'))
+    return df 
 
 class STARTUP_QUERIES():
     FL_COUNT_BY_DAY_DF = get_flight_counts_by_day()
