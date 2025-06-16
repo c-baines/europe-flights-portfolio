@@ -186,7 +186,17 @@ class IcaoIso(Base):
     icao_state_name = Column(String)
     icao = Column(String)
     iso_alpha3 = Column(String)
-   
+
+class Airlines(Base):
+
+    __tablename__ = 'airlines'
+    __table_args__ = {'schema': 'public'}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    airline = Column(String)
+    country = Column(String)
+    telephony = Column(String)
+    icao_operator_code = Column(String)
 
 class TableName(Enum):
     emissions = 'emissions'
@@ -194,6 +204,7 @@ class TableName(Enum):
     icao_list = 'icao_list' 
     iso_codes = 'iso_codes'
     icao_iso = "icao_iso"
+    airlines = "airlines" 
 
 
 # Create just the "flight_list"/"co2_emissions"/"icao_list/iso_codes" table, run this the first time
@@ -203,3 +214,5 @@ class TableName(Enum):
 # Base.metadata.tables['public.icao_list'].create(engine)
 # Base.metadata.tables['public.iso_codes'].create(engine)
 # Base.metadata.tables['public.icao_iso'].create(engine)
+# Base.metadata.tables['public.airlines'].create(engine)
+

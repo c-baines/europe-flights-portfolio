@@ -11,12 +11,15 @@ last modified: 21/5/25
 import pandas as pd
 from pathlib import Path
 import os
-from src.db import FlightList, Emissions, IcaoList, IsoCodes, IcaoIso, TableName, session
+from src.db import FlightList, Emissions, IcaoList, IsoCodes, IcaoIso, TableName, session, Airlines
 from loguru import logger
 
 here = Path(__file__).resolve().parent 
 
 def dict_to_db(row: dict, table: TableName):
+    """
+     !! enter lowercase column name for row_get() !!
+    """
     # make all keys lowercase and remove 'NaN' strings
     row = {k.lower(): v for k,v in row.items() if not str(v).lower()=='nan'}
     if table == TableName.flight_list:
@@ -43,14 +46,17 @@ def dict_to_db(row: dict, table: TableName):
             "icao_state_name": row.get("iso country name") or None,
             "icao": row.get("state code/icao") or None,
             "iso_alpha3": row.get("iso alpha3") or None
-            
         }
-        # db_obj = IcaoIso(
-        #     icao=row['state code/icao'],
-        #     iso_alpha3=row['iso alpha3']
-        # )
         db_obj = IcaoIso(**new_row)
-
+    if table == TableName.airlines:
+        new_row = {
+            "airline": row.get("company") or None,
+            "country": row.get("country") or None,
+            "telephony": row.get("telephony") or None,
+            "icao_operator_code": row.get("3ltr") or None
+        }
+        db_obj = Airlines(**new_row)
+      
     return db_obj
 
 def ingest_csv(filename: str, table: TableName, delimiter: str = ',' ):
@@ -116,3 +122,4 @@ def ingest_folder(folder: str, table: TableName, delimiter: str = ','):
 # ingest_folder('iata-icao', TableName.icao_list)
 # ingest_folder('iso_codes', TableName.iso_codes)
 # ingest_folder('icao_iso', TableName.icao_iso, ';')
+ingest_folder('airlines', TableName.airlines)

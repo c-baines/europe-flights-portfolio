@@ -72,3 +72,8 @@ https://unstats.un.org/unsd/methodology/m49/overview/
 
 callbacks function pattern 
 https://community.plotly.com/t/dash-callback-in-a-separate-file/14122/16
+
+
+Accessibility colour scheme references: https://analysisfunction.civilservice.gov.uk/policy-store/data-visualisation-colours-in-charts/
+
+Airlines source: https://github.com/rikgale/ICAOList/blob/main/Airlines.csv
