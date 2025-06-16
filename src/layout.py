@@ -22,6 +22,7 @@ layout = html.Div([
         value="all",
         placeholder='Select a Month'
     ),
+    # flight count decomposed cards
     dcc.Graph(
         id="card"
     ),

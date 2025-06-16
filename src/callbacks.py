@@ -24,7 +24,6 @@ def register_callbacks(app):
         """
         Number of flights line graph with date dropdown
         """
-        # old ---------------------------------------------------------
         df = STARTUP_QUERIES.FL_COUNT_BY_DAY_DF.copy()
 
         # filter df for only records where df['month_string']=month_string
@@ -39,6 +38,14 @@ def register_callbacks(app):
             'overflights': 'dash'
         }
 
+        color_map = {
+            'total': '#000000',   
+            'intra_eu': '#12436D',
+            'arrivals_from_outside': '#28A197', 
+            'departures_to_outside': '#801650', 
+            'overflights': '#F46A25'
+        }
+
         # redefine the figure
         fig = px.line(
             df, 
@@ -46,8 +53,10 @@ def register_callbacks(app):
             y='count', 
             color='category',
             line_dash='category',         # Controls which dash style to use
-            line_dash_map=line_styles
+            line_dash_map=line_styles,
+            color_discrete_map=color_map
         )
+        
         return fig
 
 
@@ -85,7 +94,7 @@ def register_callbacks(app):
                 go.Indicator(
                     mode="number+delta",
                     value=val[0],
-                    delta={'reference': val[1]} if val[1] else None,
+                    delta={'reference': val[1], 'relative': True, 'valueformat': '.2%'} if val[1] else None, 
                     title={'text': col.replace('_', ' ').title()}),
                     row=1, col=count
             )
