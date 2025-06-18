@@ -4,13 +4,13 @@ src/layout.py
 App layout
 
 created: 19/5/25
-modified: 12/6/25
+modified: 16/6/25
 """
 
 from dash import html, dcc, Input, Output
 import pandas as pd
 import plotly.express as px
-from src.queries import get_flight_counts_by_day, get_months_unique, get_country_emissions, get_year_emissions, get_month_emissions
+from src.queries import get_flight_counts_by_day, get_months_unique, get_country_emissions, get_year_emissions, get_month_emissions, STARTUP_QUERIES
 
 layout = html.Div([
     # number of flights line graph
@@ -44,6 +44,18 @@ layout = html.Div([
         placeholder='Month'
     ),
     dcc.Graph(id='emissions-choropleth')
+    ]),
+
+    # airlines bar graphs
+    html.Div(children=[
+        html.H1('Airlines'),
+        dcc.Dropdown(
+            id='bar-dropdown',
+            options=[{"label": "All years", "value": "all"}] + [{"label": y, "value": y} for y in STARTUP_QUERIES.TOP_AIRLINES_DF['year'].unique().tolist()],
+            value='all',
+            placeholder='Year' 
+        ),
+        dcc.Graph(id='airlines-bar-graph')
     ])
 
 ])

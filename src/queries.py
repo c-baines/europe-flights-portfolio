@@ -4,7 +4,7 @@ src/queries.py
 PostgreSQL queries
 
 created: 19/5/25
-modified: 12/6/25
+modified: 16/6/25
 """
 
 from sqlalchemy import text
@@ -72,13 +72,36 @@ def get_counts_cards():
     query = text("""
             SELECT * 
             FROM card_counts 
-            ORDER BY month
-            ;
+            ORDER BY month;
         """)
     df = pd.read_sql(query, engine)
     df['month_string'] = df['month'].apply(lambda x: datetime.strptime(str(x), "%Y-%m-%d %H:%M:%S%z").strftime('%B %Y'))
     return df 
 
+def get_top_airlines():
+    query = text("""
+                SELECT COUNT(fl.icao_operator) AS count, a.airline as airline, DATE_PART('year', fl.dof) as year
+                FROM flight_list fl
+                LEFT JOIN airlines a ON fl.icao_operator = a.icao_operator_code
+                GROUP BY airline, year;
+                 """)
+    df = pd.read_sql(query, engine)
+    return df
+
+def get_top_models():
+    # get most popular aircrafts
+    query = text("""
+                select count(*), am.normalized_model, date_part('year', fl.dof) as year
+                from aircraft_model am
+                left join flight_list fl on fl.model = am.raw_model 
+                group by 2, 3
+                ;
+                 """)
+    df = pd.read_sql(query, engine)
+    return df
+
 class STARTUP_QUERIES():
     FL_COUNT_BY_DAY_DF = get_flight_counts_by_day()
     COUNTRY_EMISSIONS_DF = get_country_emissions()
+    TOP_AIRLINES_DF = get_top_airlines()
+    TOP_MODEL_DF = get_top_models()

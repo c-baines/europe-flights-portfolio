@@ -5,7 +5,7 @@ created: 19/5/25
 modified: 12/6/25
 """
 from dash import Input, Output, callback
-from src.queries import STARTUP_QUERIES, get_counts_cards
+from src.queries import STARTUP_QUERIES, get_counts_cards, get_top_airlines, get_top_models
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
@@ -58,7 +58,6 @@ def register_callbacks(app):
         )
         
         return fig
-
 
     @app.callback(
         Output('card', 'figure'),
@@ -182,7 +181,72 @@ def register_callbacks(app):
         )
     
         return fig
-    
 
+    @app.callback(
+        Output('airlines-bar-graph', 'figure'),
+        Input('bar-dropdown', 'value')
+    )    
+    def update_aircraft_graphs(year):
+        airlines_df = STARTUP_QUERIES.TOP_AIRLINES_DF.copy()
+        model_df = STARTUP_QUERIES.TOP_MODEL_DF.copy()
+
+        if year!='all':
+            airlines_df = airlines_df[airlines_df['year']==year]
+            airlines_df.sort_values('count', ascending=False, inplace=True)
+            airlines_df = airlines_df.head(10) 
+
+            model_df = model_df[model_df['year']==year]
+            model_df.sort_values('count', ascending=False, inplace=True)
+            model_df = model_df.head(10)
+
+        else:
+            airlines_df = airlines_df.groupby(['airline']).agg({
+            'count': 'sum'
+            }).reset_index()
+            airlines_df.sort_values('count', ascending=False, inplace=True)
+            airlines_df = airlines_df.head(10)
+
+            model_df = model_df.groupby(['normalized_model']).agg({
+            'count': 'sum'
+            }).reset_index()
+            model_df.sort_values('count', ascending=False, inplace=True)
+            model_df = model_df.head(10)
+
+        airline_count = airlines_df['count'].to_list()[:5]
+        airline = airlines_df['airline'].to_list()[:5]
+        airline_count.reverse()
+        airline.reverse()
+
+        model_count = model_df['count'].to_list()[:5]
+        models = model_df['normalized_model'].to_list()[1:6]
+        model_count.reverse()
+        models.reverse()
+
+
+        fig = make_subplots(
+            rows=1, cols=2
+        )
+
+        fig.add_trace(
+            go.Bar(
+                x=airline_count,
+                y=airline,
+                name='top-airlines',
+                orientation='h'
+            ),
+            row=1, col=1
+        )
+
+        fig.add_trace(
+            go.Bar(
+                x=model_count,
+                y=models,
+                name='top-aircraft',
+                orientation='h'
+            ),
+            row=1, col=2
+        )
+
+        return fig
 
 
