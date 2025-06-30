@@ -4,13 +4,29 @@ src/layout.py
 App layout
 
 created: 19/5/25
-modified: 16/6/25
+modified: 30/6/25
 """
 
 from dash import html, dcc, Input, Output
 import pandas as pd
 import plotly.express as px
 from src.queries import get_flight_counts_by_day, get_months_unique, get_country_emissions, get_year_emissions, get_month_emissions, STARTUP_QUERIES
+
+manufacturer_df = STARTUP_QUERIES.MANUFACTURER_COUNTS_DF.copy()
+manufacturer_fig = px.line(
+                        manufacturer_df, 
+                        x='year', 
+                        y='count', 
+                        color='manufacturer'
+                    )
+manufacturer_fig.update_layout(
+    xaxis=dict(
+        tickmode='linear',
+        dtick=1,
+        tickformat='.0f',
+        title='Year'
+    )
+)
 
 layout = html.Div([
     # number of flights line graph
@@ -48,14 +64,15 @@ layout = html.Div([
 
     # airlines bar graphs
     html.Div(children=[
-        html.H1('Airlines'),
+        html.H1('Airlines and Aircraft'),
         dcc.Dropdown(
-            id='bar-dropdown',
+            id='airlines-dropdown',
             options=[{"label": "All years", "value": "all"}] + [{"label": y, "value": y} for y in STARTUP_QUERIES.TOP_AIRLINES_DF['year'].unique().tolist()],
             value='all',
             placeholder='Year' 
         ),
-        dcc.Graph(id='airlines-bar-graph')
+        dcc.Graph(id='airlines-bar-graph'),
+        dcc.Graph(id='manufacturer-line-graph', figure=manufacturer_fig)
     ])
 
 ])

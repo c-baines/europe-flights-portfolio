@@ -4,7 +4,7 @@ src/queries.py
 PostgreSQL queries
 
 created: 19/5/25
-modified: 16/6/25
+modified: 30/6/25
 """
 
 from sqlalchemy import text
@@ -100,8 +100,17 @@ def get_top_models():
     df = pd.read_sql(query, engine)
     return df
 
+def get_manufacturer_counts():
+    query = text("""
+                 SELECT *
+                 FROM manufacturer_counts;
+                 """)
+    df = pd.read_sql(query, engine)
+    return df
+
 class STARTUP_QUERIES():
     FL_COUNT_BY_DAY_DF = get_flight_counts_by_day()
     COUNTRY_EMISSIONS_DF = get_country_emissions()
     TOP_AIRLINES_DF = get_top_airlines()
     TOP_MODEL_DF = get_top_models()
+    MANUFACTURER_COUNTS_DF = get_manufacturer_counts()

@@ -2,7 +2,7 @@
 src/callbacks.py
 
 created: 19/5/25
-modified: 12/6/25
+modified: 30/6/25
 """
 from dash import Input, Output, callback
 from src.queries import STARTUP_QUERIES, get_counts_cards, get_top_airlines, get_top_models
@@ -184,7 +184,7 @@ def register_callbacks(app):
 
     @app.callback(
         Output('airlines-bar-graph', 'figure'),
-        Input('bar-dropdown', 'value')
+        Input('airlines-dropdown', 'value')
     )    
     def update_aircraft_graphs(year):
         airlines_df = STARTUP_QUERIES.TOP_AIRLINES_DF.copy()
@@ -248,5 +248,4 @@ def register_callbacks(app):
         )
 
         return fig
-
 
