@@ -8,7 +8,6 @@ modified: 4/7/25
 
 from dash import Dash
 from src.layout import layout
-import plotly.express as px
 from src.callbacks import register_callbacks
 import os
 
