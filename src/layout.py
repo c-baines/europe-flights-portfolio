@@ -4,7 +4,7 @@ src/layout.py
 App layout
 
 created: 19/5/25
-modified: 30/6/25
+modified: 2/7/25
 """
 
 from dash import html, dcc, Input, Output
@@ -42,7 +42,21 @@ layout = html.Div([
     dcc.Graph(
         id="card"
     ),
-    dcc.Graph(id='flight-count-graph')]),
+    dcc.Graph(id='flight-count-graph'
+            )]),
+
+    # airlines bar graphs
+    html.Div(children=[
+        html.H2('Airlines and Aircraft'),
+        dcc.Dropdown(
+            id='airlines-dropdown',
+            options=[{"label": "All years", "value": "all"}] + [{"label": y, "value": y} for y in STARTUP_QUERIES.TOP_AIRLINES_DF['year'].unique().tolist()],
+            value='all',
+            placeholder='Year' 
+        ),
+        dcc.Graph(id='airlines-bar-graph'),
+        dcc.Graph(id='manufacturer-line-graph', figure=manufacturer_fig)
+    ]),
 
     # emissions heatmap
     html.Div(children=[
@@ -60,19 +74,6 @@ layout = html.Div([
         placeholder='Month'
     ),
     dcc.Graph(id='emissions-choropleth')
-    ]),
-
-    # airlines bar graphs
-    html.Div(children=[
-        html.H1('Airlines and Aircraft'),
-        dcc.Dropdown(
-            id='airlines-dropdown',
-            options=[{"label": "All years", "value": "all"}] + [{"label": y, "value": y} for y in STARTUP_QUERIES.TOP_AIRLINES_DF['year'].unique().tolist()],
-            value='all',
-            placeholder='Year' 
-        ),
-        dcc.Graph(id='airlines-bar-graph'),
-        dcc.Graph(id='manufacturer-line-graph', figure=manufacturer_fig)
     ])
 
 ])

@@ -5,6 +5,9 @@ created: 2/7/25
 modified: 2/7/25
 */ 
 
-/* ==== Base Styles ==== */
-
+.graph-container {
+    margin: 100px;   /* adds space outside */
+    width: 100%;    /* ensures full width */
+    background-color: rgba(255, 0, 0, 0.1);
+}
 

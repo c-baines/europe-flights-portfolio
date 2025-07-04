@@ -2,7 +2,7 @@
 src/callbacks.py
 
 created: 19/5/25
-modified: 30/6/25
+modified: 4/7/25
 """
 from dash import Input, Output, callback
 from src.queries import STARTUP_QUERIES, get_counts_cards, get_top_airlines, get_top_models
@@ -30,34 +30,97 @@ def register_callbacks(app):
         if month_string!='all':
             df = df[df['month_year']==month_string] 
 
-        line_styles = {
-            'total': 'solid',
-            'intra_eu': 'dash',
-            'arrivals_from_outside': 'dash',
-            'departures_to_outside': 'dash',
-            'overflights': 'dash'
-        }
-
         color_map = {
             'total': '#000000',   
-            'intra_eu': '#12436D',
+            'intra-eu': '#12436D',
             'arrivals_from_outside': '#28A197', 
             'departures_to_outside': '#801650', 
             'overflights': '#F46A25'
         }
 
-        # redefine the figure
-        fig = px.line(
-            df, 
-            x='dof', 
-            y='count', 
-            color='category',
-            line_dash='category',         # Controls which dash style to use
-            line_dash_map=line_styles,
-            color_discrete_map=color_map
+        mode_size_map = {
+            'total': 8,
+            'intra-eu': 6,
+            'arrivals_from_outside': 6,
+            'departures_to_outside': 6,
+            'overflights': 6
+        }
+
+        # line_size_map = {
+        #             'total': 4,
+        #             'intra-eu': 2,
+        #             'arrivals_from_outside': 2,
+        #             'departures_to_outside': 2,
+        #             'overflights': 2
+        # }
+
+        fig = go.Figure()
+
+        # Loop through each category to create a separate trace
+        for category in df['category'].unique():
+            category_df = df[df['category'] == category]
+            
+            fig.add_trace(go.Scatter(
+                x=category_df['dof'],
+                y=category_df['count'],
+                mode='lines',
+                name=category,
+                line=dict(
+                    color=color_map[category]
+                ),
+                showlegend=False
+            ))
+
+            # add end markers and labels  
+            fig.add_trace(go.Scatter(
+                x=[category_df['dof'].iloc[-1]],
+                y=[category_df['count'].iloc[-1]],
+                mode='markers',
+                marker=dict(
+                    color=color_map[category],
+                    size=mode_size_map[category]  
+                ),
+                showlegend=False
+            ))
+
+            fig.add_annotation(
+                x=category_df['dof'].iloc[-1],
+                y=category_df['count'].iloc[-1],
+                text=category,  # just the name
+                font=dict(size=12),
+                xanchor='left',
+                yanchor='middle',
+                showarrow=False
+            )
+
+
+        fig.update_layout(
+            xaxis=dict(
+                showgrid=False,  
+                showline=True,   
+                linecolor='rgb(204, 204, 204)',
+                linewidth=2
+            ),
+            yaxis=dict(
+                showgrid=True, 
+                showline=False,   
+                linecolor='rgb(204, 204, 204)',
+                linewidth=2
+            ),
+            plot_bgcolor='white', 
+            # width=1550,
+            height=500
         )
-        
-        return fig
+
+        fig.update_layout(
+            title="Number of flights Over Time",
+            xaxis_title="Time",
+            yaxis_title="Number of flights",
+            template="plotly_white"
+        )
+
+        return fig 
+
 
     @app.callback(
         Output('card', 'figure'),
@@ -69,6 +132,7 @@ def register_callbacks(app):
         df = get_counts_cards().copy()
         columns = ['intra_eu', 'departures_to_outside', 'arrivals_from_outside', 'overflights']
         vals = {}
+        # tuple of value and previous month value
         if not month_string or month_string=='all':
             vals = {col:(df[col].sum(), None) for col in columns}
 
@@ -77,6 +141,7 @@ def register_callbacks(app):
             prev_month_str = (datetime.strptime(month_string,'%B %Y') + relativedelta(months=-1)).strftime('%B %Y')
             prev_df = df[df['month_string']==prev_month_str].copy()
 
+            # if there is no previous month data 
             if prev_df.empty:
                 vals = {col:(curr_df[col].to_list()[0], None) for col in columns}
             else:
@@ -93,12 +158,12 @@ def register_callbacks(app):
                 go.Indicator(
                     mode="number+delta",
                     value=val[0],
-                    delta={'reference': val[1], 'relative': True, 'valueformat': '.2%'} if val[1] else None, 
+                    delta={'reference': val[1], 'relative': True, 'valueformat': '.1%'} if val[1] else None, 
                     title={'text': col.replace('_', ' ').title()}),
                     row=1, col=count
             )
             count+=1
-    
+
         fig.update_layout(
             paper_bgcolor = "lightgray",
             height=250)
@@ -245,6 +310,23 @@ def register_callbacks(app):
                 orientation='h'
             ),
             row=1, col=2
+        )
+
+        fig.update_layout(
+                    xaxis=dict(
+                        showgrid=True,  
+                        showline=False,   
+                        linecolor='rgb(204, 204, 204)',
+                        linewidth=2
+                    ),
+                    yaxis=dict(
+                        showgrid=True, 
+                        showline=True,   
+                        linecolor='rgb(204, 204, 204)',
+                        linewidth=2
+                    ),
+                    plot_bgcolor='white',
+                    showlegend=False
         )
 
         return fig
