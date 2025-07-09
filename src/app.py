@@ -3,15 +3,16 @@ src/app.py
 
 author: c-baines
 created: 28/4/25
-modified: 21/5/25
+modified: 9/7/25
 """
 
 from dash import Dash
 from src.layout import layout
-import plotly.express as px
 from src.callbacks import register_callbacks
+import os
 
-app = Dash(__name__)
+assets_path = os.path.join(os.path.dirname(__file__), '..', 'assets')
+app = Dash(__name__, assets_folder=assets_path)
 app.layout = layout
 register_callbacks(app)
 
