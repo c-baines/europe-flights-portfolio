@@ -2,12 +2,12 @@
 assets/style.css
 
 created: 2/7/25
-modified: 2/7/25
+modified: 9/7/25
 */ 
 
-.graph-container {
-    margin: 100px;   /* adds space outside */
-    width: 100%;    /* ensures full width */
-    background-color: rgba(255, 0, 0, 0.1);
+body {
+    color: #2a3f5f; 
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 100 !important;
 }
 

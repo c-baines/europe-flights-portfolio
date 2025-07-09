@@ -2,7 +2,7 @@
 src/callbacks.py
 
 created: 19/5/25
-modified: 4/7/25
+modified: 9/7/25
 """
 from dash import Input, Output, callback
 from src.queries import STARTUP_QUERIES, get_counts_cards, get_top_airlines, get_top_models
@@ -15,18 +15,30 @@ from dateutil.relativedelta import relativedelta
 
 
 def register_callbacks(app): 
+    """
+    
 
+    """
+    # Flight counts line graph
     @app.callback(
             Output('flight-count-graph', 'figure'),
             Input('flight-count-dropdown', 'value')
     )
     def update_month_dropdown(month_string):
         """
-        Number of flights line graph with date dropdown
+        Generates a Plotly figure showing the number of flights over time filtered by selected month.
+
+        This function pulls a copy of the flight counts by day DataFrame, filters by the given month_string and creats a multi-line Plotly line chart.   
+
+        Args:
+            month_string (str): a string representing the selected month (e.g. "January 2025")
+                If 'all' is selected, no filtering is applied and all months are included.
+
+        Returns:
+            plotly.graph_objects.Figure: a Plotly figure containing the time series line chart.
         """
         df = STARTUP_QUERIES.FL_COUNT_BY_DAY_DF.copy()
 
-        # filter df for only records where df['month_string']=month_string
         if month_string!='all':
             df = df[df['month_year']==month_string] 
 
@@ -46,52 +58,42 @@ def register_callbacks(app):
             'overflights': 6
         }
 
-        # line_size_map = {
-        #             'total': 4,
-        #             'intra-eu': 2,
-        #             'arrivals_from_outside': 2,
-        #             'departures_to_outside': 2,
-        #             'overflights': 2
-        # }
-
         fig = go.Figure()
 
-        # Loop through each category to create a separate trace
         for category in df['category'].unique():
             category_df = df[df['category'] == category]
             
-            fig.add_trace(go.Scatter(
-                x=category_df['dof'],
-                y=category_df['count'],
-                mode='lines',
-                name=category,
-                line=dict(
-                    color=color_map[category]
-                ),
-                showlegend=False
-            ))
-
-            # add end markers and labels  
-            fig.add_trace(go.Scatter(
-                x=[category_df['dof'].iloc[-1]],
-                y=[category_df['count'].iloc[-1]],
-                mode='markers',
-                marker=dict(
-                    color=color_map[category],
-                    size=mode_size_map[category]  
-                ),
-                showlegend=False
-            ))
-
-            fig.add_annotation(
-                x=category_df['dof'].iloc[-1],
-                y=category_df['count'].iloc[-1],
-                text=category,  # just the name
-                font=dict(size=12),
-                xanchor='left',
-                yanchor='middle',
-                showarrow=False
+            fig.add_trace(
+                go.Scatter(
+                    x=category_df['dof'],
+                    y=category_df['count'],
+                    mode='lines',
+                    name=category,
+                    line=dict(color=color_map[category]),
+                showlegend=True
+                )
             )
+
+            # fig.add_trace(
+            #     go.Scatter(
+            #         x=[category_df['dof'].iloc[-1]],
+            #         y=[category_df['count'].iloc[-1]],
+            #         mode='markers',
+            #         marker=dict(color=color_map[category],
+            #         size=mode_size_map[category]),
+            #     showlegend=True
+            #     )
+            # )
+
+            # fig.add_annotation(
+            #     x=category_df['dof'].iloc[-1],
+            #     y=category_df['count'].iloc[-1],
+            #     text=category,  # add labels
+            #     font=dict(size=12),
+            #     xanchor='left',
+            #     yanchor='middle',
+            #     showarrow=False
+            # )
 
 
         fig.update_layout(
@@ -107,8 +109,14 @@ def register_callbacks(app):
                 linecolor='rgb(204, 204, 204)',
                 linewidth=2
             ),
+            legend=dict(
+                orientation="h",     # horizontal legend
+                yanchor="bottom",
+                y=-0.25,              # move below the plot (adjust as needed)
+                xanchor="center",
+                x=0.5
+            ),
             plot_bgcolor='white', 
-            # width=1550,
             height=500
         )
 
@@ -121,13 +129,19 @@ def register_callbacks(app):
 
         return fig 
 
-
+    # Flight count cards
     @app.callback(
         Output('card', 'figure'),
         Input('flight-count-dropdown', 'value')
     )
-    def update_card_counts(month_string):
+    def update_indicator_cards(month_string):
         """
+
+        Args:
+            month_string (str):
+
+        Returns:
+            plotly.graph_objects.Figure: 
         """
         df = get_counts_cards().copy()
         columns = ['intra_eu', 'departures_to_outside', 'arrivals_from_outside', 'overflights']
@@ -147,29 +161,55 @@ def register_callbacks(app):
             else:
                 vals = {col:(curr_df[col].to_list()[0], prev_df[col].to_list()[0]) for col in columns}
 
-        fig = make_subplots(
-                rows=1, cols=len(columns),
-                specs=[[{'type': 'domain'}]*len(columns)]
-            )
+        # fig = make_subplots(
+        #         rows=1, cols=len(columns),
+        #         specs=[[{'type': 'domain'}]*len(columns)]
+        #     )
         
-        count=1
-        for col, val in vals.items():
+        # count=1 # count is for tracking column position [0, 1, 2, 3, ...]
+        # for col, val in vals.items():
+        #     fig.add_trace(
+        #         go.Indicator(
+        #             mode="number+delta",
+        #             value=val[0],
+        #             delta={'reference': val[1], 'relative': True, 'valueformat': '.1%'} if val[1] else None, 
+        #             title={'text': col.replace('_', ' ').title()}),
+        #             row=1, col=count
+        #     )
+        #     count+=1
+
+        # fig.update_layout(
+        #     paper_bgcolor = "lightgray",
+        #     height=250)
+
+        items = list(vals.items())
+        items[2], items[3] = items[3], items[2] # switched positions of cards
+
+        # Create a 2x2 grid of indicator domains
+        fig = make_subplots(
+            rows=2, cols=2,
+            specs=[[{'type': 'domain'}, {'type': 'domain'}],
+                [{'type': 'domain'}, {'type': 'domain'}]]
+        )
+
+        # Add each indicator to the correct row/col position
+        for i, (col, val) in enumerate(vals.items()):
+            row = i // 2 + 1   # row 1 or 2
+            col_num = i % 2 + 1  # col 1 or 2
             fig.add_trace(
                 go.Indicator(
                     mode="number+delta",
                     value=val[0],
                     delta={'reference': val[1], 'relative': True, 'valueformat': '.1%'} if val[1] else None, 
-                    title={'text': col.replace('_', ' ').title()}),
-                    row=1, col=count
+                    title={'text': col.replace('_', ' ').title()}
+                ),
+                row=row, col=col_num
             )
-            count+=1
 
-        fig.update_layout(
-            paper_bgcolor = "lightgray",
-            height=250)
 
         return fig
   
+    # Emissions data plots 
     @app.callback(
         Output('emissions-choropleth', 'figure'),
         Input('choropleth-dropdown-year', 'value'),
@@ -178,6 +218,14 @@ def register_callbacks(app):
     def update_choropleth_year(year, month):
         """
         Emissions heatmap and bar graph with date dropdown
+
+
+        Args:
+            year ():
+            month ():
+
+        Returns:
+            plotly.graph_objects.Figure: 
         """
     
         df = STARTUP_QUERIES.COUNTRY_EMISSIONS_DF.copy()
@@ -208,7 +256,8 @@ def register_callbacks(app):
         )
 
         fig.add_trace(
-            px.choropleth(df,
+            px.choropleth(
+                    df,
                     locations='iso_alpha3',
                     color='co2_qty_tonnes',
                     hover_name='state_name',
@@ -234,24 +283,33 @@ def register_callbacks(app):
         )
 
         fig.update_geos(
-        projection_type="natural earth",
-        showcoastlines=True,
-        showframe=False,
-        row=1, col=1
+            projection_type="natural earth",
+            showcoastlines=True,
+            showframe=False,
+            row=1, col=1
         )
 
         fig.update_layout(
-        title='CO₂ Emissions and Top Emitters',
-        height=600
+            title='CO₂ Emissions and Top Emitters',
+            height=600
         )
     
         return fig
 
+    # Airlines and aircraft plots
     @app.callback(
         Output('airlines-bar-graph', 'figure'),
         Input('airlines-dropdown', 'value')
     )    
     def update_aircraft_graphs(year):
+        """
+
+        Args:
+            year ():
+
+        Returns:
+            plotly.graph_objects.Figure: 
+        """
         airlines_df = STARTUP_QUERIES.TOP_AIRLINES_DF.copy()
         model_df = STARTUP_QUERIES.TOP_MODEL_DF.copy()
 

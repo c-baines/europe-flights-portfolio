@@ -4,7 +4,7 @@ src/queries.py
 PostgreSQL queries
 
 created: 19/5/25
-modified: 30/6/25
+modified: 9/7/25
 """
 
 from sqlalchemy import text
@@ -103,7 +103,8 @@ def get_top_models():
 def get_manufacturer_counts():
     query = text("""
                  SELECT *
-                 FROM manufacturer_counts;
+                 FROM manufacturer_counts
+                 WHERE manufacturer != 'Not recorded';
                  """)
     df = pd.read_sql(query, engine)
     return df

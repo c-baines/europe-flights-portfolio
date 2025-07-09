@@ -4,34 +4,65 @@ src/layout.py
 App layout
 
 created: 19/5/25
-modified: 2/7/25
+modified: 9/7/25
 """
 
 from dash import html, dcc, Input, Output
 import pandas as pd
 import plotly.express as px
 from src.queries import get_flight_counts_by_day, get_months_unique, get_country_emissions, get_year_emissions, get_month_emissions, STARTUP_QUERIES
+import plotly.graph_objects as go
+
 
 manufacturer_df = STARTUP_QUERIES.MANUFACTURER_COUNTS_DF.copy()
-manufacturer_fig = px.line(
-                        manufacturer_df, 
-                        x='year', 
-                        y='count', 
-                        color='manufacturer'
-                    )
-manufacturer_fig.update_layout(
+manu_fig = go.Figure()
+
+for manufacturer in manufacturer_df['manufacturer'].unique():
+    df_subset = manufacturer_df[manufacturer_df['manufacturer'] == manufacturer]
+
+    manu_fig.add_trace(go.Scatter(
+        x=df_subset['year'],
+        y=df_subset['count'],
+        mode='lines',
+        name=manufacturer
+    ))
+
+manu_fig.update_layout(
     xaxis=dict(
+        showgrid=False,
+        showline=True,   
+        linecolor='rgb(204, 204, 204)',
+        linewidth=2,
         tickmode='linear',
-        dtick=1,
-        tickformat='.0f',
-        title='Year'
-    )
+        dtick=1,               # step size of 1
+        tickformat='d'
+    ),
+    yaxis=dict(
+        showgrid=True,
+        gridcolor='rgb(204, 204, 204)',
+        showline=False,   
+        linecolor='rgb(204, 204, 204)',
+        linewidth=2
+    ),
+    legend=dict(
+        orientation="h",     # horizontal legend
+        yanchor="bottom",
+        y=-0.25,              # move below the plot (adjust as needed)
+        xanchor="center",
+        x=0.5
+    ),
+    title="Market Share of Manufacturers",
+    xaxis_title="Year",
+    yaxis_title="Number of Aircraft",
+    template="plotly_white",
+    plot_bgcolor='white', 
+    height=500
 )
 
 layout = html.Div([
     # number of flights line graph
     html.Div(children=[
-    html.H1("Flight Counts"),
+    html.H1("European Flight Records Dashboard"),
     dcc.Dropdown(
         id='flight-count-dropdown', 
         options=[{"label": "All data", "value": "all"}] + [{"label": m, "value": m} for m in get_months_unique()],
@@ -55,7 +86,7 @@ layout = html.Div([
             placeholder='Year' 
         ),
         dcc.Graph(id='airlines-bar-graph'),
-        dcc.Graph(id='manufacturer-line-graph', figure=manufacturer_fig)
+        dcc.Graph(id='manufacturer-line-graph', figure=manu_fig)
     ]),
 
     # emissions heatmap
