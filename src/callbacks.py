@@ -2,7 +2,7 @@
 src/callbacks.py
 
 created: 19/5/25
-modified: 9/7/25
+modified: 12/7/25
 """
 from dash import Input, Output, callback
 from src.queries import STARTUP_QUERIES, get_counts_cards, get_top_airlines, get_top_models
@@ -17,6 +17,8 @@ from dateutil.relativedelta import relativedelta
 def register_callbacks(app): 
     """
     
+    Args:
+        app ():
 
     """
     # Flight counts line graph
@@ -101,10 +103,15 @@ def register_callbacks(app):
                 showgrid=False,  
                 showline=True,   
                 linecolor='rgb(204, 204, 204)',
-                linewidth=2
+                linewidth=2,
+                ticklen=5,
+                ticks='outside',
+                tickwidth=2,
+                tickcolor='rgb(204, 204, 204)'
             ),
             yaxis=dict(
                 showgrid=True, 
+                griddash='dot',
                 showline=False,   
                 linecolor='rgb(204, 204, 204)',
                 linewidth=2
@@ -112,19 +119,19 @@ def register_callbacks(app):
             legend=dict(
                 orientation="h",     # horizontal legend
                 yanchor="bottom",
-                y=-0.25,              # move below the plot (adjust as needed)
+                y=-0.3,              # move below the plot (adjust as needed)
                 xanchor="center",
                 x=0.5
             ),
             plot_bgcolor='white', 
-            height=500
+            height=500,
+            template="plotly_white"
         )
 
         fig.update_layout(
             title="Number of flights Over Time",
             xaxis_title="Time",
-            yaxis_title="Number of flights",
-            template="plotly_white"
+            yaxis_title="Number of flights"
         )
 
         return fig 
@@ -136,12 +143,15 @@ def register_callbacks(app):
     )
     def update_indicator_cards(month_string):
         """
+        Generates four indicator cards showing number of flights by category with delta. 
+
+        Pulls a copy of the get_counts_cards dataframe, creates a dictionary current month and previous month values and creates four subplots.
 
         Args:
-            month_string (str):
+            month_string (str): selected time period as a string.
 
         Returns:
-            plotly.graph_objects.Figure: 
+            plotly.graph_objects.Figure: a Plotly figure containing four indicator cards.
         """
         df = get_counts_cards().copy()
         columns = ['intra_eu', 'departures_to_outside', 'arrivals_from_outside', 'overflights']
@@ -276,8 +286,8 @@ def register_callbacks(app):
                     color='rgba(50, 171, 96, 1.0)',
                     width=1)
                 ),
-            name='CO2 quantity (tonnes)',
-            orientation='h'
+                name='CO2 quantity (tonnes)',
+                orientation='h'
             ),
             row=1, col=2
         )
@@ -299,6 +309,7 @@ def register_callbacks(app):
     # Airlines and aircraft plots
     @app.callback(
         Output('airlines-bar-graph', 'figure'),
+        # Output('manufacturer-pie-chart', 'figure'),
         Input('airlines-dropdown', 'value')
     )    
     def update_aircraft_graphs(year):
@@ -345,9 +356,8 @@ def register_callbacks(app):
         model_count.reverse()
         models.reverse()
 
-
         fig = make_subplots(
-            rows=1, cols=2
+            rows=1, cols=3
         )
 
         fig.add_trace(
@@ -355,9 +365,11 @@ def register_callbacks(app):
                 x=airline_count,
                 y=airline,
                 name='top-airlines',
-                orientation='h'
+                orientation='h',
+                width=0.5,
+                marker_color='#2073BC'
             ),
-            row=1, col=1
+            row=1, col=2
         )
 
         fig.add_trace(
@@ -365,26 +377,45 @@ def register_callbacks(app):
                 x=model_count,
                 y=models,
                 name='top-aircraft',
-                orientation='h'
+                orientation='h',
+                width=0.5,
+                marker_color='#6BACE6'
             ),
-            row=1, col=2
+            row=1, col=3
         )
 
+       
+
+        # write code to: 
+        # 1. sum all manufacturer counts 
+        # 2. take each manufacturer count and divide by sum of all 
+        # 3. return df to be used in px.pie()
+
+        # fig.add_trace(
+        #     px.pie(
+        #         # df, 
+        #         # 
+        #     )
+        # )
+
+        for i in [2, 3]:
+            fig.update_layout({
+                f"xaxis{i}": dict(
+                    showgrid=True,
+                    gridcolor='rgb(204, 204, 204)',  
+                    griddash='dot'
+                ),
+                f"yaxis{i}": dict(
+                    showgrid=True, 
+                    showline=False,   
+                    linecolor='rgb(204, 204, 204)',
+                    linewidth=2
+                )
+            })
+
         fig.update_layout(
-                    xaxis=dict(
-                        showgrid=True,  
-                        showline=False,   
-                        linecolor='rgb(204, 204, 204)',
-                        linewidth=2
-                    ),
-                    yaxis=dict(
-                        showgrid=True, 
-                        showline=True,   
-                        linecolor='rgb(204, 204, 204)',
-                        linewidth=2
-                    ),
-                    plot_bgcolor='white',
-                    showlegend=False
+            plot_bgcolor='white',
+            showlegend=False
         )
 
         return fig

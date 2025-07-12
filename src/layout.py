@@ -4,7 +4,7 @@ src/layout.py
 App layout
 
 created: 19/5/25
-modified: 9/7/25
+modified: 12/7/25
 """
 
 from dash import html, dcc, Input, Output
@@ -34,24 +34,29 @@ manu_fig.update_layout(
         linecolor='rgb(204, 204, 204)',
         linewidth=2,
         tickmode='linear',
-        dtick=1,               # step size of 1
-        tickformat='d'
+        dtick=1,              
+        tickformat='d',
+        ticklen=5,
+        ticks='outside',
+        tickwidth=2,
+        tickcolor='rgb(204, 204, 204)'
     ),
     yaxis=dict(
         showgrid=True,
-        gridcolor='rgb(204, 204, 204)',
         showline=False,   
         linecolor='rgb(204, 204, 204)',
-        linewidth=2
+        linewidth=2,
+        griddash='dot',
+        gridcolor='rgb(204, 204, 204)'       
     ),
     legend=dict(
-        orientation="h",     # horizontal legend
+        orientation="h",     
         yanchor="bottom",
-        y=-0.25,              # move below the plot (adjust as needed)
+        y=-0.25,              
         xanchor="center",
         x=0.5
     ),
-    title="Market Share of Manufacturers",
+    title="Number of Recorded Flights by Manfactuerer",
     xaxis_title="Year",
     yaxis_title="Number of Aircraft",
     template="plotly_white",
@@ -62,49 +67,59 @@ manu_fig.update_layout(
 layout = html.Div([
     # number of flights line graph
     html.Div(children=[
-    html.H1("European Flight Records Dashboard"),
-    dcc.Dropdown(
-        id='flight-count-dropdown', 
-        options=[{"label": "All data", "value": "all"}] + [{"label": m, "value": m} for m in get_months_unique()],
-        value="all",
-        placeholder='Select a Month'
-    ),
+        html.H1("European Flight Records Dashboard"),
+
+        dcc.Dropdown(
+            id='flight-count-dropdown', 
+            options=[{"label": "All data", "value": "all"}] + [{"label": m, "value": m} for m in get_months_unique()],
+            value="all",
+            placeholder='Select a Month'
+        ),
+
     # flight count decomposed cards
-    dcc.Graph(
-        id="card"
-    ),
-    dcc.Graph(id='flight-count-graph'
-            )]),
+        dcc.Graph(
+            id="card"
+        ),
+
+        dcc.Graph(id='flight-count-graph'
+        )
+    ]),
 
     # airlines bar graphs
     html.Div(children=[
         html.H2('Airlines and Aircraft'),
+
         dcc.Dropdown(
             id='airlines-dropdown',
             options=[{"label": "All years", "value": "all"}] + [{"label": y, "value": y} for y in STARTUP_QUERIES.TOP_AIRLINES_DF['year'].unique().tolist()],
             value='all',
             placeholder='Year' 
         ),
+
         dcc.Graph(id='airlines-bar-graph'),
+
         dcc.Graph(id='manufacturer-line-graph', figure=manu_fig)
     ]),
 
     # emissions heatmap
     html.Div(children=[
-    html.H1('Choropleth Emissions Test'),
-    dcc.Dropdown(
-        id='choropleth-dropdown-year',
-        options=[{"label": "All years", "value": "all"}] + [{"label": y, "value": y} for y in get_year_emissions()],
-        value="all",
-        placeholder='Year'
-    ),
-    dcc.Dropdown(
-        id='choropleth-dropdown-month',
-        options=[{"label": "All months", "value": "all"}] + [{"label": m, "value": m} for m in get_month_emissions()],
-        value="all",
-        placeholder='Month'
-    ),
-    dcc.Graph(id='emissions-choropleth')
+        html.H1('Choropleth Emissions Test'),
+        
+        dcc.Dropdown(
+            id='choropleth-dropdown-year',
+            options=[{"label": "All years", "value": "all"}] + [{"label": y, "value": y} for y in get_year_emissions()],
+            value="all",
+            placeholder='Year'
+        ),
+
+        dcc.Dropdown(
+            id='choropleth-dropdown-month',
+            options=[{"label": "All months", "value": "all"}] + [{"label": m, "value": m} for m in get_month_emissions()],
+            value="all",
+            placeholder='Month'
+        ),
+
+        dcc.Graph(id='emissions-choropleth')
     ])
 
 ])
