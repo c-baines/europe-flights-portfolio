@@ -2,7 +2,7 @@
 src/callbacks.py
 
 created: 19/5/25
-modified: 12/7/25
+modified: 14/7/25
 """
 from dash import Input, Output, callback
 from src.queries import STARTUP_QUERIES, get_counts_cards, get_top_airlines, get_top_models
@@ -60,6 +60,13 @@ def register_callbacks(app):
             'overflights': 6
         }
 
+        label_map = {
+            'total': 'Total',
+            'intra-eu': 'Intra Europe',
+            'arrivals_from_outside': 'Arrivals',
+            'departures_to_outside': 'Departures',
+            'overflights': 'Overflights'
+        }
         fig = go.Figure()
 
         for category in df['category'].unique():
@@ -70,12 +77,13 @@ def register_callbacks(app):
                     x=category_df['dof'],
                     y=category_df['count'],
                     mode='lines',
-                    name=category,
+                    name=label_map.get(category, category), # gets category key value from dict or default category label 
                     line=dict(color=color_map[category]),
                 showlegend=True
                 )
             )
 
+            # add end marker 
             # fig.add_trace(
             #     go.Scatter(
             #         x=[category_df['dof'].iloc[-1]],
@@ -87,6 +95,7 @@ def register_callbacks(app):
             #     )
             # )
 
+            # add label to end marker
             # fig.add_annotation(
             #     x=category_df['dof'].iloc[-1],
             #     y=category_df['count'].iloc[-1],
@@ -96,7 +105,6 @@ def register_callbacks(app):
             #     yanchor='middle',
             #     showarrow=False
             # )
-
 
         fig.update_layout(
             xaxis=dict(
@@ -357,7 +365,6 @@ def register_callbacks(app):
                 'count': 'sum'
             }).reset_index()
 
-
         airline_count = airlines_df['count'].to_list()[:5]
         airline = airlines_df['airline'].to_list()[:5]
         airline_count.reverse()
@@ -382,7 +389,8 @@ def register_callbacks(app):
             labels=manufacturer_df['manufacturer'],
             values=manufacturer_df['count'],
             textinfo='label+percent',
-            textposition=['inside' if pct >= 4 else 'outside' for pct in percentages]
+            textposition=['inside' if pct >= 4 else 'outside' for pct in percentages],
+            name=''
             ),
             row=1, col=1
         )
@@ -391,7 +399,7 @@ def register_callbacks(app):
             go.Bar(
                 x=model_count,
                 y=models,
-                name='top-aircraft',
+                name='',
                 orientation='h',
                 width=0.5,
                 marker_color='#2073BC'
@@ -403,7 +411,7 @@ def register_callbacks(app):
             go.Bar(
                 x=airline_count,
                 y=airline,
-                name='top-airlines',
+                name='',
                 orientation='h',
                 width=0.5,
                 marker_color='#6BACE6'
