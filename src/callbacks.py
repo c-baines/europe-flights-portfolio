@@ -117,9 +117,9 @@ def register_callbacks(app):
                 linewidth=2
             ),
             legend=dict(
-                orientation="h",     # horizontal legend
+                orientation="h",     
                 yanchor="bottom",
-                y=-0.3,              # move below the plot (adjust as needed)
+                y=-0.3,              
                 xanchor="center",
                 x=0.5
             ),
@@ -195,14 +195,12 @@ def register_callbacks(app):
         items = list(vals.items())
         items[2], items[3] = items[3], items[2] # switched positions of cards
 
-        # Create a 2x2 grid of indicator domains
         fig = make_subplots(
             rows=2, cols=2,
             specs=[[{'type': 'domain'}, {'type': 'domain'}],
                 [{'type': 'domain'}, {'type': 'domain'}]]
         )
 
-        # Add each indicator to the correct row/col position
         for i, (col, val) in enumerate(vals.items()):
             row = i // 2 + 1   # row 1 or 2
             col_num = i % 2 + 1  # col 1 or 2
@@ -323,6 +321,13 @@ def register_callbacks(app):
         """
         airlines_df = STARTUP_QUERIES.TOP_AIRLINES_DF.copy()
         model_df = STARTUP_QUERIES.TOP_MODEL_DF.copy()
+        manufacturer_df = STARTUP_QUERIES.MANUFACTURER_COUNTS_DF.copy()
+
+        airlines_df['airline'] = airlines_df['airline'].replace({
+            "TURK HAVA YOLLARI (TURKISH AIRLINES CO.)": "TURKISH<br>AIRLINES",
+            "DEUTSCHE LUFTHANSA, AG, KOELN": "LUFTHANSA",
+            "EASYJET UK LTD": "EASYJET"
+        }) 
 
         if year!='all':
             airlines_df = airlines_df[airlines_df['year']==year]
@@ -332,6 +337,8 @@ def register_callbacks(app):
             model_df = model_df[model_df['year']==year]
             model_df.sort_values('count', ascending=False, inplace=True)
             model_df = model_df.head(10)
+
+            manufacturer_df = manufacturer_df[manufacturer_df['year']==year]
 
         else:
             airlines_df = airlines_df.groupby(['airline']).agg({
@@ -346,6 +353,11 @@ def register_callbacks(app):
             model_df.sort_values('count', ascending=False, inplace=True)
             model_df = model_df.head(10)
 
+            manufacturer_df = manufacturer_df.groupby(['manufacturer']).agg({
+                'count': 'sum'
+            }).reset_index()
+
+
         airline_count = airlines_df['count'].to_list()[:5]
         airline = airlines_df['airline'].to_list()[:5]
         airline_count.reverse()
@@ -357,19 +369,22 @@ def register_callbacks(app):
         models.reverse()
 
         fig = make_subplots(
-            rows=1, cols=3
+            rows=1, cols=3,
+            subplot_titles=('Market Share', 'Top Aircraft Models', 'Top Airlines'),
+            specs=[[{'type':'domain'}, {'type':'bar'}, {'type': 'bar'}]]
         )
 
+        total = manufacturer_df['count'].sum()
+        percentages = manufacturer_df['count'] / total * 100
+       
         fig.add_trace(
-            go.Bar(
-                x=airline_count,
-                y=airline,
-                name='top-airlines',
-                orientation='h',
-                width=0.5,
-                marker_color='#2073BC'
+            go.Pie(
+            labels=manufacturer_df['manufacturer'],
+            values=manufacturer_df['count'],
+            textinfo='label+percent',
+            textposition=['inside' if pct >= 4 else 'outside' for pct in percentages]
             ),
-            row=1, col=2
+            row=1, col=1
         )
 
         fig.add_trace(
@@ -379,39 +394,54 @@ def register_callbacks(app):
                 name='top-aircraft',
                 orientation='h',
                 width=0.5,
+                marker_color='#2073BC'
+            ),
+            row=1, col=2
+        )
+
+        fig.add_trace(
+            go.Bar(
+                x=airline_count,
+                y=airline,
+                name='top-airlines',
+                orientation='h',
+                width=0.5,
                 marker_color='#6BACE6'
             ),
             row=1, col=3
         )
 
-       
+        # update layout for (1,2)
+        fig.update_layout(
+            xaxis=dict(
+                showgrid=True,
+                showline=False,
+                gridcolor='rgb(204, 204, 204)',  
+                griddash='dot'
+            ),
+            yaxis=dict(
+                showgrid=True, 
+                showline=False,   
+                linecolor='rgb(204, 204, 204)',
+                linewidth=2
+            )
+        )
 
-        # write code to: 
-        # 1. sum all manufacturer counts 
-        # 2. take each manufacturer count and divide by sum of all 
-        # 3. return df to be used in px.pie()
-
-        # fig.add_trace(
-        #     px.pie(
-        #         # df, 
-        #         # 
-        #     )
-        # )
-
-        for i in [2, 3]:
-            fig.update_layout({
-                f"xaxis{i}": dict(
-                    showgrid=True,
-                    gridcolor='rgb(204, 204, 204)',  
-                    griddash='dot'
-                ),
-                f"yaxis{i}": dict(
-                    showgrid=True, 
-                    showline=False,   
-                    linecolor='rgb(204, 204, 204)',
-                    linewidth=2
-                )
-            })
+        # update layout for plot (1,3)
+        fig.update_layout(
+            xaxis2=dict(
+                showgrid=True,
+                showline=False,
+                gridcolor='rgb(204, 204, 204)',  
+                griddash='dot'
+            ),
+            yaxis2=dict(
+                showgrid=True, 
+                showline=False,   
+                linecolor='rgb(204, 204, 204)',
+                linewidth=2
+            )
+        )
 
         fig.update_layout(
             plot_bgcolor='white',

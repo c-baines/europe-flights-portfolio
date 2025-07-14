@@ -4,7 +4,7 @@ src/queries.py
 PostgreSQL queries
 
 created: 19/5/25
-modified: 9/7/25
+modified: 13/7/25
 """
 
 from sqlalchemy import text
@@ -23,7 +23,8 @@ def get_flight_counts_by_day():
 
 def get_months_unique():
     query = text("""
-                 SELECT DISTINCT dof
+                 SELECT 
+                    DISTINCT dof
                  FROM flight_list;             
             """)
     df = pd.read_sql(query, engine, dtype_backend="pyarrow")
@@ -80,7 +81,10 @@ def get_counts_cards():
 
 def get_top_airlines():
     query = text("""
-                SELECT COUNT(fl.icao_operator) AS count, a.airline as airline, DATE_PART('year', fl.dof) as year
+                SELECT 
+                    COUNT(fl.icao_operator) AS count, 
+                    a.airline as airline, 
+                    DATE_PART('year', fl.dof) as year
                 FROM flight_list fl
                 LEFT JOIN airlines a ON fl.icao_operator = a.icao_operator_code
                 GROUP BY airline, year;
@@ -91,11 +95,13 @@ def get_top_airlines():
 def get_top_models():
     # get most popular aircrafts
     query = text("""
-                select count(*), am.normalized_model, date_part('year', fl.dof) as year
-                from aircraft_model am
-                left join flight_list fl on fl.model = am.raw_model 
-                group by 2, 3
-                ;
+                SELECT 
+                    COUNT(*), 
+                    am.normalized_model, 
+                    date_part('year', fl.dof) as year
+                FROM aircraft_model am
+                LEFT JOIN flight_list fl on fl.model = am.raw_model 
+                GROUP BY 2, 3;
                  """)
     df = pd.read_sql(query, engine)
     return df
@@ -104,10 +110,86 @@ def get_manufacturer_counts():
     query = text("""
                  SELECT *
                  FROM manufacturer_counts
-                 WHERE manufacturer != 'Not recorded';
+                 WHERE manufacturer != 'Not recorded' 
+                 AND manufacturer != 'Ground Support Equipment (GSE)';
                  """)
     df = pd.read_sql(query, engine)
     return df
+
+def get_top_departures():
+    query = text("""
+                WITH monthly_counts AS (
+                    SELECT 
+                        f.adep,
+                        DATE_TRUNC('month', f.dof)::date AS month,
+                        COUNT(*) AS departures
+                    FROM flight_list f
+                    WHERE f.adep IS NOT NULL
+                    GROUP BY f.adep, DATE_TRUNC('month', f.dof)
+                ),
+                airport_totals AS (
+                    SELECT adep, SUM(departures) AS total_departures
+                    FROM monthly_counts
+                    GROUP BY adep
+                ),
+                top_airports AS (
+                    SELECT adep
+                    FROM airport_totals
+                    ORDER BY total_departures DESC
+                    LIMIT 10
+                )
+                SELECT 
+                    mc.adep,
+                    i.airport,
+                    mc.month,
+                    mc.departures
+                FROM monthly_counts mc
+                JOIN top_airports ta ON mc.adep = ta.adep
+                LEFT JOIN icao_list i ON mc.adep = i.icao
+                ORDER BY mc.month, mc.departures DESC;
+                """
+            )
+    df = pd.read_sql(query, engine)
+    return df
+    
+
+def get_top_destinations():
+    query = text("""
+                WITH monthly_counts AS (
+                    SELECT 
+                        f.ades,
+                        DATE_TRUNC('month', f.dof)::date AS month,
+                        COUNT(*) AS destinations
+                    FROM flight_list f
+                    WHERE f.ades IS NOT NULL
+                    GROUP BY f.ades, DATE_TRUNC('month', f.dof)
+                ),
+                airport_totals AS (
+                    SELECT ades, SUM(destinations) AS total_destinations
+                    FROM monthly_counts
+                    GROUP BY ades
+                ),
+                top_airports AS (
+                    SELECT ades
+                    FROM airport_totals
+                    ORDER BY total_destinations DESC
+                    LIMIT 10
+                )
+                SELECT 
+                    mc.ades,
+                    i.airport,
+                    mc.month,
+                    mc.destinations
+                FROM monthly_counts mc
+                JOIN top_airports ta ON mc.ades = ta.ades
+                LEFT JOIN icao_list i ON mc.ades = i.icao
+                ORDER BY mc.month, mc.destinations DESC;
+                """
+            )
+    df = pd.read_sql(query, engine)
+    return df
+
+    
 
 class STARTUP_QUERIES():
     FL_COUNT_BY_DAY_DF = get_flight_counts_by_day()

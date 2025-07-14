@@ -77,12 +77,9 @@ layout = html.Div([
         ),
 
     # flight count decomposed cards
-        dcc.Graph(
-            id="card"
-        ),
+        dcc.Graph(id="card"),
 
-        dcc.Graph(id='flight-count-graph'
-        )
+        dcc.Graph(id='flight-count-graph')
     ]),
 
     # airlines bar graphs
