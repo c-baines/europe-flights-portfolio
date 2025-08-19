@@ -2,12 +2,30 @@
 assets/style.css
 
 created: 2/7/25
-modified: 9/7/25
+modified: 5/8/25
 */ 
 
 body {
+    background-color: rgb(250, 250, 250);
     color: #2a3f5f; 
     font-family: 'Open Sans', sans-serif;
     font-weight: 100 !important;
 }
+
+.my-dropdown {
+    width: 200px;
+    border-radius: 5px;
+    display: inline-block;
+    display: inline-block;
+    margin-right: 10px;
+    vertical-align: top; 
+}
+
+.dropdown-container {
+    display: inline-block;
+    width: 200px; 
+    margin-right: 10px;
+    vertical-align: top; 
+}
+
 
