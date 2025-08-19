@@ -216,4 +216,4 @@ class STARTUP_QUERIES():
     MANUFACTURER_COUNTS_DF = get_manufacturer_counts()
     MANUFACTURER_PERCENT_DF = get_manufacturer_percent()
 
-get_manufacturer_counts()
+
