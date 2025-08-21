@@ -7,7 +7,6 @@ modified: 20/8/25
 """
 
 from dash import Dash, html, page_container, page_registry
-# from src.pages.home import layout
 from src.callbacks import register_callbacks
 import os
 import dash_bootstrap_components as dbc
@@ -18,9 +17,9 @@ app = Dash(__name__, use_pages=True, assets_folder=assets_path, external_stylesh
 nav_links = dbc.Nav(
     [
         dbc.NavLink(
-            page["name"],       # Display name
-            href=page["path"],  # URL path
-            active="exact"      # highlight only when exact match
+            page["name"],       
+            href=page["path"],  
+            active="exact"      
         )
         for page in page_registry.values()
     ],
@@ -30,10 +29,9 @@ nav_links = dbc.Nav(
 navbar = dbc.Navbar(
     dbc.Container(
         [
-            # Left-aligned row with brand + nav
             dbc.Row(
                 [
-                    dbc.Col(dbc.NavbarBrand("Europe Flights Portfolio", className="me-4")),
+                    dbc.Col(dbc.NavbarBrand("European Flight Data Dashboard", className="me-4")),
                     dbc.Col(
                         dbc.Nav(
                             [
@@ -46,7 +44,7 @@ navbar = dbc.Navbar(
                     ),
                 ],
                 align="center",
-                className="g-0",  # remove gutter spacing
+                className="g-0", 
             ),
         ],
         fluid=True,

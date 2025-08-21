@@ -3,13 +3,13 @@ src/db.py
 
 Initialise postgreSQL database with variables for flight_list, emissions, icao_list, iso_codes
 
-1. Connect to local postgreSQL 
-2. Define table class with variables 
-3. Create table in postgreSQL
+1. Connects to local postgreSQL 
+2. Defines table class with variables 
+3. Creates table in postgreSQL
 
 author: c-baines
 created: 23/4/25
-last modified: 12/5/25 
+last modified: 15/7/25 
 """
 
 from sqlalchemy import create_engine
@@ -43,30 +43,34 @@ Base = declarative_base()
 # create class of objects that inherts from Base class (SQL class)
 class FlightList(Base):
     """
-    Represents table flight_list in the db
+    SQLAlchemy ORM model for the ``flight_list`` table.
+
+    This table stores metadata about individual flights, including aircraft
+    identifiers, flight numbers, aerodromes, and timestamps. The data is 
+    sourced from Eurocontrol.
 
     Attributes:
-    __tablename__ (str): PostgreSQL table name 
-    __table_args__ (dict): Additional table arguments
-    id (int): Primary key of the table
-    ec_id (str): Eurocontrol hash id 
-    icao24 (str): International Civil Avation Organization aircraft identifier
-    flt_id (str): Flight number
-    dof (date): Date of flight
-    adep (str): Aerodrome of departure
-    ades (str): Aerodrome of destination 
-    adep_p (str): Planned aerodrome of departure
-    ades_p (str): Planned aerodrome of destination 
-    registration (str): Aircraft registration number
-    model (str): Aircraft model name
-    typecode (str): Aircraft model code
-    icao_aircraft_class (str): Aircraft type class
-    icao_operator (str): Airline code
-    first_seen (datetime): Time aircraft first seen
-    last_seen (datetime): Time aircraft last seen
-    version (str): Algorithm version used to detect flight events
-    unix_time (int): first_seen in unix time  
+        __tablename__ (str): Database table name (``flight_list``).
+        __table_args__ (dict): Additional table configuration (schema = "public").
 
+        id (int): Primary key.
+        ec_id (str, optional): Eurocontrol hash identifier for the flight.
+        icao24 (str, optional): ICAO 24-bit aircraft identifier.
+        flt_id (str, optional): Flight number.
+        dof (date, optional): Date of flight.
+        adep (str, optional): Actual aerodrome of departure.
+        ades (str, optional): Actual aerodrome of destination.
+        adep_p (str, optional): Planned aerodrome of departure.
+        ades_p (str, optional): Planned aerodrome of destination.
+        registration (str, optional): Aircraft registration number.
+        model (str, optional): Aircraft model name.
+        typecode (str, optional): Aircraft model ICAO type designator.
+        icao_aircraft_class (str, optional): ICAO aircraft type class.
+        icao_operator (str, optional): ICAO airline/operator code.
+        first_seen (datetime, optional): Timestamp when the aircraft was first observed.
+        last_seen (datetime, optional): Timestamp when the aircraft was last observed.
+        version (str, optional): Algorithm version used to detect flight events.
+        unix_time (int, optional): First seen time in Unix epoch seconds.
     """
     
     __tablename__ = "flight_list"
@@ -93,18 +97,23 @@ class FlightList(Base):
 
 class Emissions(Base):
     """
-    Represents emissions table in the db
+    SQLAlchemy ORM model for the ``co2_emmissions_by_state`` table.
+
+    This table stores data on the CO2 emissions of flights by state. The data is 
+    sourced from Eurocontrol.
     
     Attributes:
-        __tablename__ (str): PostgreSQL table name 
-        __table_args__ (dict): Additional table arguments
-        year (int): year of record
-        month (int): number of month of record
-        state_name (str): name of state
-        state_code (str): 2 letter state abbreviation
-        co2_qty_tonnes (flt): quantitity of CO2 emissions in tonnes (kg)
-        tf (int): traffic for the state 
-        note (bool): special aggregation for state
+        __tablename__ (str): Database table name (``co2_emmissions_by_state``).
+        __table_args__ (dict): Additional table configuration (schema = "public").
+
+        id (int): Primary key.
+        year (int): Year of record.
+        month (int): Number of month of record.
+        state_name (str): Name of state.
+        state_code (str): 2 letter state abbreviation.
+        co2_qty_tonnes (flt): Quantitity of CO2 emissions in tonnes (kg).
+        tf (int): Traffic for the state. 
+        note (bool): Special aggregation for state.
     """
 
     __tablename__ = "emissions"
@@ -121,19 +130,23 @@ class Emissions(Base):
 
 class IcaoList(Base):
     """
-    Represents table icao_list in db
+    SQLAlchemy ORM model for the ``icao_list`` table.
 
+    This table stores a list of airports with country and region codes, 
+    corresponding IATA and ICAO airport codes and the latitude and longitude of the airport.
+    
     Attributes:
-        __tablename__ (str): 
-        __table_args__ (str):
-        country_code (str):
-        region_name (str):
-        iata (str):
-        icao (str):
-        airport (str):
-        latitude (flt):
-        longitude (flt):
+        __tablename__ (str): Database table name (``icao_list``).
+        __table_args__ (dict): Additional table configuration (schema = "public").
 
+        id (int): Primary key.
+        country_code (str): Country the airport is located in.
+        region_name (str): Region the airport is located in.
+        iata (str): IATA code for the airport. 
+        icao (str): ICAO code for the airport.
+        airport (str): Airport name.
+        latitude (flt): Latitude of the airport.
+        longitude (flt): Longitude of the airport. 
     """
 
     __tablename__ = "icao_list"
@@ -150,18 +163,22 @@ class IcaoList(Base):
 
 class IsoCodes(Base):
     """
-    Represents table iso_codes in db
+    SQLAlchemy ORM model for the ``iso_codes`` table.
 
+    This table contains a list of countries with region and subregion and intermediate regions, 
+    with corresponsing 2 and 3 character ISO codes. 
+    
     Attributes:
-        __tablename__ (str):
-        __table_args__ (str):
-        id (int):
-        region_name (str):
-        subregion_name (str):
-        intermediate_region_name (str):
-        country (str):
-        iso_alpha2 (str):
-        iso_alpha3 (str): 
+        __tablename__ (str): Database table name (``iso_codes``).
+        __table_args__ (dict): Additional table configuration (schema = "public").
+
+        id (int): Primary key.
+        region_name (str): Region name e.g. 'Africa'.
+        subregion_name (str): Subregion name e.g. 'Sub-Saharan Africa'.
+        intermediate_region_name (str): Intermediate region name e.g. 'Eastern Africa'.
+        country (str): Country name.
+        iso_alpha2 (str): 2 character ISO country code.
+        iso_alpha3 (str): 3 character ISO country code.
 
     """
 

@@ -1,10 +1,10 @@
 """
 src/queries.py
 
-PostgreSQL queries
+PostgreSQL queries used in callbacks.py
 
 created: 19/5/25
-modified: 19/8/25
+modified: 21/8/25
 """
 
 from sqlalchemy import text
@@ -215,5 +215,5 @@ class STARTUP_QUERIES():
     TOP_MODEL_DF = get_top_models()
     MANUFACTURER_COUNTS_DF = get_manufacturer_counts()
     MANUFACTURER_PERCENT_DF = get_manufacturer_percent()
-
+    CARD_COUNTS_DF = get_counts_cards()
 

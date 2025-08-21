@@ -8,12 +8,8 @@ modified: 20/8/25
 """
 
 import dash
-from dash import html, dcc, Input, Output
-import pandas as pd
-import plotly.express as px
+from dash import html, dcc
 from src.queries import get_flight_counts_by_day, get_months_unique, get_country_emissions, get_year_emissions, get_month_emissions, STARTUP_QUERIES
-import plotly.graph_objects as go
-from statistics import mean
 import dash_bootstrap_components as dbc
 
 dash.register_page(__name__, path='/', name='Home', order=1)

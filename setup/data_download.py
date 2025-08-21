@@ -1,46 +1,64 @@
 """ 
 data_download.py 
 
-Downloads flight_list, flight_events, measurements data files from OPDI.
+Downloads ``flight_list``, ``flight_events``, ``measurements``, ``co2_emmissions_by_state`` data files from OPDI.
 
-1. Download .parquet files from OPDI between specified date range
-2. Convert to .csv 
-3. Delete .parquet files
+This script is based on the download script available from Eurocontrol. 
 
-Author: Eurocontrol Open Performance Data Initiative
-Source: https://www.opdi.aero/flight-event-data 
+Original functionality: Downloads ``flight_list``, ``flight_events`` and ``measurements`` data as parquet files.
+
+Modifications:
+    - Add ``co2_emissions_by_state`` data download 
+    - Skip file for download if csv with filename already exists
+    - Convert parquet to csv for ingestion into PostgreSQL
+    - Added function to download new data releases and missing data 
+
+Note: Eurocontrol filename ``co2_emmissions_by_state`` contains a typo for "emissions". 
+
+Original author: Eurocontrol Open Performance Data Initiative
+Source: https://www.opdi.aero/flight-list-data
+Last modified: 28/7/25 c-baines
 """
 
 import os
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil.relativedelta import relativedelta
 from pathlib import Path
 import pandas as pd
+from loguru import logger
 
-# ADDED 24/4/5 c-baines: get parent directory
+# ADDED: get parent directory
 here = Path(__file__).resolve().parent 
 
 def generate_urls(data_type: str, start_date: str, end_date: str) -> list:
     """
-    Generate a list of URLs for flight lists, flight events, or measurements.
+    Generate a list of URLs for ``flight_list``, ``flight_events``, ``measurements`` or ``co2_emmissions_by_state``.
+
+    Note: Eurocontrol filename ``co2_emmissions_by_state`` contains a typo for "emissions". 
 
     Args:
-        data_type (str): Type of data ("flight_list", "flight_events", "measurements").
-        start_date (str): The start date in the format YYYYMM or YYYYMMDD.
-        end_date (str): The end date in the format YYYYMM or YYYYMMDD.
+        data_type (str): Type of data ``flight_list``, ``flight_events``, ``measurements``, ``co2_emmissions_by_state``).
+        start_date (str): The start date in the format YYYYMM, YYYYMMDD or YYYY.
+        end_date (str): The end date in the format YYYYMM, YYYYMMDD or YYYY.
 
     Returns:
         list: List of generated URLs.
     """
     base_url = f"https://www.eurocontrol.int/performance/data/download/OPDI/v002/{data_type}/{data_type}_"
+    emissions_url = f"https://www.eurocontrol.int/performance/data/download/csv/{data_type}_" 
 
     urls = []
     
     if data_type == "flight_list":  # Monthly intervals
-        start_dt = datetime.strptime(start_date, "%Y%m")
+        start_dt = datetime.strptime(start_date, "%Y%m") # crate datetime obj from start_date string
         end_dt = datetime.strptime(end_date, "%Y%m")
         delta = relativedelta(months=1)
+    # ADDED: co2_emmissions_by_state data intervals 
+    elif data_type == "co2_emmissions_by_state": # Yearly intervals
+        start_dt = datetime.strptime(start_date, "%Y")
+        end_dt = datetime.strptime(end_date, "%Y")
+        delta = relativedelta(years=1)
     else:  # Flight events & Measurements: 10-day intervals
         start_dt = datetime.strptime(start_date, "%Y%m%d")
         end_dt = datetime.strptime(end_date, "%Y%m%d")
@@ -50,6 +68,9 @@ def generate_urls(data_type: str, start_date: str, end_date: str) -> list:
     while current_dt <= end_dt:
         if data_type == "flight_list":
             url = f"{base_url}{current_dt.strftime('%Y%m')}.parquet"
+        # ADDED: co2_emmissions-by_state url
+        elif data_type == "co2_emmissions_by_state": 
+            url = f"{emissions_url}{current_dt.strftime('%Y')}.csv"
         else:
             next_dt = current_dt + delta
             url = f"{base_url}{current_dt.strftime('%Y%m%d')}_{next_dt.strftime('%Y%m%d')}.parquet"
@@ -70,15 +91,16 @@ def download_files(urls: list, save_folder: str):
     os.makedirs(save_folder, exist_ok=True)
 
     for url in urls:
-        file_name = url.split("/")[-1]
+        file_name = url.split("/")[-1] # file_name "flight_list_{YYYYmm}.parquet"
         save_path = os.path.join(save_folder, file_name)
-
-        # ADDED 22/4/5 c-baines: skip .parquet if .csv already exists 
-        if os.path.exists(save_path.replace('.parquet', '.csv')): 
-            print(f"Skipping {file_name}, already exists.")
+        # ADDED: skip file if file_name.csv already exists 
+        csv_path = save_path.split(".")[0] + '.csv'
+        if os.path.exists(csv_path): 
+            logger.info(f"SKIPPING: {csv_path} already exists.")
             continue
 
-        print(f"Downloading {url}...")
+        # MODIFIED: changed from print() to logger.info()
+        logger.info(f"DOWNLOADING: {url}")
 
         try:
             response = requests.get(url, stream=True)
@@ -88,25 +110,37 @@ def download_files(urls: list, save_folder: str):
                 for chunk in response.iter_content(chunk_size=1024):
                     file.write(chunk)
 
-            print(f"Saved to {save_path}")
+            # MODIFIED: changed from print() to logger.info()
+            logger.info(f"SAVED TO {save_path}")
 
         except requests.exceptions.RequestException as e:
-            print(f"Failed to download {url}: {e}")
+            logger.error(f"Failed to download {url}: {e}. This month's data may not be released yet")
+            continue
 
-        # ADDED 22/4/25 c-baines: convert .parquet to .csv 
-        df = pd.read_parquet(save_path) 
-        df.to_csv(save_path.replace('.parquet', '.csv'), index=False) 
+        # ADDED: convert .parquet to .csv and delete .parquet
+        if save_path.split(".")[-1] == "parquet":
+            df = pd.read_parquet(save_path) 
+            df.to_csv(save_path.replace('.parquet', '.csv'), index=False)
+            logger.info(f"CONVERTED {save_path} to csv")
 
-        # ADDED 22/4/25 c-baines: delete .parquet file after conversion
-        os.remove(save_path) 
+            os.remove(save_path) 
+            logger.info(f"REMOVED {save_path}")
 
-if __name__ == "__main__":
+# ADDED: update function  
+def update(): 
+    """
+    Checks downloaded data and downloads all new and missing files.
+    """
     datasets = {
-        "flight_list": ("202501", "202502")#,
-        #"flight_events": ("20220101", "20241231")#,
-        #"measurements": ("20220101", "20241231")
+        "co2_emmissions_by_state": ("2010", datetime.strftime(date.today(), "%Y")),
+        "flight_list": ("202201", datetime.strftime(date.today(), "%Y%m"))
+        #"flight_events": ("20220101", datetime.strftime(date.today(), "%Y%m"))#,
+        #"measurements": ("20220101", datetime.strftime(date.today(), "%Y%m")),
     }
-
+    
     for data_type, (start_date, end_date) in datasets.items():
         urls = generate_urls(data_type, start_date, end_date)
         download_files(urls, f"{here}/data/{data_type}")
+
+# if __name__ == "__main__": 
+#     update()

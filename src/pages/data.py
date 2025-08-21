@@ -8,7 +8,6 @@ created: 20/08/25
 
 import dash
 from dash import html
-import dash_bootstrap_components as dbc
 
 dash.register_page(__name__, path='/data', name='Data', order=2)
 
