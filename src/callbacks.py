@@ -4,16 +4,17 @@ src/callbacks.py
 Callbacks used to update figures in app.
 
 created: 19/5/25
-modified: 21/8/25
+modified: 22/8/25
 """
 from dash import Input, Output, callback
-from src.queries import STARTUP_QUERIES, get_counts_cards, get_top_airlines, get_top_models
-import plotly.express as px
+from src.queries import STARTUP_QUERIES, get_top_airlines, get_top_models
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 # import pandas as pd
+# import plotly.express as px
+
 
 def register_callbacks(app): 
     """
@@ -40,7 +41,7 @@ def register_callbacks(app):
         Returns:
             plotly.graph_objects.Figure: Updated indicator cards figure.
         """
-        df = STARTUP_QUERIES.CARD_COUNTS_DF().copy()
+        df = STARTUP_QUERIES.CARD_COUNTS_DF.copy()
         columns = ['intra_eu', 'departures_to_outside', 'arrivals_from_outside', 'overflights']
         vals = {}
         # tuple of value and previous month value
