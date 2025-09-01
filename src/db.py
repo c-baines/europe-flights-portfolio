@@ -186,10 +186,10 @@ class IsoCodes(Base):
     __table_args__ = {'schema': 'public'}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    region_name = Column(String)
-    subregion_name = Column(String)
-    intermediate_region_name = Column(String)
     country = Column(String)
+    region_name = Column(String)
+    intermediate_region_name = Column(String)
+    subregion_name = Column(String)
     iso_alpha2 = Column(String)
     iso_alpha3 = Column(String)
 
@@ -223,13 +223,14 @@ class TableName(Enum):
     icao_iso = "icao_iso"
     airlines = "airlines" 
 
-
-# Create just the "flight_list"/"co2_emissions"/"icao_list/iso_codes" table, run this the first time
-# Comment out when running data_ingestion.py
-# Base.metadata.tables['public.flight_list'].create(engine)
-# Base.metadata.tables['public.emissions'].create(engine)
-# Base.metadata.tables['public.icao_list'].create(engine)
-# Base.metadata.tables['public.iso_codes'].create(engine)
-# Base.metadata.tables['public.icao_iso'].create(engine)
-# Base.metadata.tables['public.airlines'].create(engine)
+def create_tables():
+    """
+    Creates empty tables ``flight_list``, ``co2_emissions``, ``icao_list``, ``iso_codes``, ``icao_iso``, ``airlines`` in PostgreSQL.
+    """
+    Base.metadata.tables['public.flight_list'].create(engine)
+    Base.metadata.tables['public.emissions'].create(engine)
+    Base.metadata.tables['public.icao_list'].create(engine)
+    Base.metadata.tables['public.iso_codes'].create(engine)
+    Base.metadata.tables['public.icao_iso'].create(engine)
+    Base.metadata.tables['public.airlines'].create(engine)
 
