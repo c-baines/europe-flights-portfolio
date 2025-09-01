@@ -17,7 +17,7 @@ Note: Eurocontrol filename ``co2_emmissions_by_state`` contains a typo for "emis
 
 Original author: Eurocontrol Open Performance Data Initiative
 Source: https://www.opdi.aero/flight-list-data
-Last modified: 28/7/25 c-baines
+Last modified: 26/8/25 c-baines
 """
 
 import os
@@ -28,6 +28,7 @@ from pathlib import Path
 import pandas as pd
 from loguru import logger
 
+
 # ADDED: get parent directory
 here = Path(__file__).resolve().parent 
 
@@ -35,7 +36,7 @@ def generate_urls(data_type: str, start_date: str, end_date: str) -> list:
     """
     Generate a list of URLs for ``flight_list``, ``flight_events``, ``measurements`` or ``co2_emmissions_by_state``.
 
-    Note: Eurocontrol filename ``co2_emmissions_by_state`` contains a typo for "emissions". 
+    Note: Eurocontrol filename for ``co2_emmissions_by_state`` contains a typo for "emissions". 
 
     Args:
         data_type (str): Type of data ``flight_list``, ``flight_events``, ``measurements``, ``co2_emmissions_by_state``).
@@ -125,6 +126,47 @@ def download_files(urls: list, save_folder: str):
 
             os.remove(save_path) 
             logger.info(f"REMOVED {save_path}")
+
+def download_metadata():
+    """
+    Download metadata files from github. 
+
+    Args:
+        urls (list): List of URLs to download.
+        save_folder (str):  Folder to save downloaded files.
+
+    """
+    urls = [
+        "https://raw.githubusercontent.com/ip2location/ip2location-iata-icao/master/iata-icao.csv",
+        "https://raw.githubusercontent.com/rikgale/ICAOList/main/Airlines.csv"
+    ]
+
+    for url in urls:
+        file_name = url.split("/")[-1].lower() 
+        save_folder = f"{here}/data/{file_name.split(".")[0]}"
+        os.makedirs(save_folder, exist_ok=True)
+        save_path = os.path.join(save_folder, file_name)
+
+        if os.path.exists(save_path): 
+            logger.info(f"SKIPPING: {file_name} already exists.")
+            continue
+
+        logger.info(f"DOWNLOADING: {url}")
+
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+
+            with open(save_path, "wb") as file:
+                for chunk in response.iter_content(chunk_size=1024):
+                    file.write(chunk)
+
+            logger.info(f"SAVED TO {save_path}")
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to download {url}: {e}.")
+            continue
+
 
 # ADDED: update function  
 def update(): 
