@@ -5,7 +5,7 @@ Ingest data into PostgreSQL database
 
 author: c-baines
 created: 23/4/25
-last modified: 18/8/25
+last modified: 29/8/25
 """
 
 import pandas as pd
@@ -200,7 +200,7 @@ def iterate_folder(folder: str):
             if file.endswith('.csv'):
                 yield os.path.join(root, file)
 
-def ingest_folder(folder: str, table: TableName, delimiter: str = ','):
+def ingest_folder(folder: str, table: TableName, delimiter: str = ',',  engine='python', encoding='utf-8'):
     """ 
     Ingests each file in a folder into the provided PostgreSQL table.
 
@@ -212,7 +212,7 @@ def ingest_folder(folder: str, table: TableName, delimiter: str = ','):
     for filename in iterate_folder(str(here/'data'/folder)):
         if is_ingested(filename, table, delimiter)==False: # check if file is already ingested or not
             logger.info(f"Processing {filename}")
-            ingest_csv(filename, table)
+            ingest_csv(filename, table, delimiter)
             logger.info(f"Finished processing {filename}")
         else:
             logger.info(f"{filename} is already ingested. Skipping file")
@@ -234,5 +234,3 @@ def update():
     """
     ingest_folder('co2_emmissions_by_state', TableName.emissions)
     ingest_folder('flight_list', TableName.flight_list)
-
-
